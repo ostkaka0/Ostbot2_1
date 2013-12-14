@@ -71,7 +71,7 @@ namespace OstBot_2_1
             {
                 if (textBox_ChatText.Focused)
                 {
-                    OstBot.connection.Send(PlayerIOClient.Message.Create("say", new object[] {textBox_ChatText.Text}));
+                    Program.ostBot.connection.Send(PlayerIOClient.Message.Create("say", new object[] {textBox_ChatText.Text}));
                     say("You: ", textBox_ChatText.Text);
                     textBox_ChatText.Text = "";
                 }
@@ -133,13 +133,13 @@ namespace OstBot_2_1
         private void button2_Click(object sender, EventArgs e)
         {
             this.groupBox_Connect.Enabled = false;
-            if (!OstBot.connected)
+            if (!Program.ostBot.connected)
             {
                 lock (button_Connect.Text)
                     this.button_Connect.Text = "Connecting...";
                 Program.console.WriteLine("Connecting...");
-                OstBot.Connect();
-                if (OstBot.connected)
+                Program.ostBot.Connect();
+                if (Program.ostBot.connected)
                 {
                     lock (button_Connect.Text)
                         this.button_Connect.Text = "Disconnect";
@@ -161,7 +161,7 @@ namespace OstBot_2_1
                 Program.console.WriteLine("Disconnecting...");
                 bool reconnect = this.checkBox_Reconnect.Enabled;
                 this.checkBox_Reconnect.Enabled = false;
-                OstBot.connection.Disconnect();
+                Program.ostBot.connection.Disconnect();
                 this.checkBox_Reconnect.Enabled = reconnect;
                 this.checkBox_Reconnect.Enabled = true;
                 lock (button_Connect.Text)
@@ -174,7 +174,7 @@ namespace OstBot_2_1
 
         private void button_Login_Click(object sender, EventArgs e)
         {
-            OstBot.Login(comboBox_Server.Text, comboBox_Email.Text, textBox_Password.Text);
+            Program.ostBot.Login(comboBox_Server.Text, comboBox_Email.Text, textBox_Password.Text);
         }
 
         private void comboBox_Server_SelectedIndexChanged(object sender, EventArgs e)
@@ -233,7 +233,7 @@ namespace OstBot_2_1
 
         private void button1_Click(object sender, EventArgs e)
         {
-            PlayerIOClient.RoomInfo[] roomInfo = OstBot.client.Multiplayer.ListRooms(comboBox_RoomType.Text, new Dictionary<string,string>(), 200000, 0);
+            PlayerIOClient.RoomInfo[] roomInfo = Program.ostBot.client.Multiplayer.ListRooms(comboBox_RoomType.Text, new Dictionary<string,string>(), 200000, 0);
 
             //checkedListBox_Rooms.Items.Clear();
             listView1.Items.Clear();
@@ -262,9 +262,9 @@ namespace OstBot_2_1
 
         private void comboBox_RoomType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (OstBot.client != null)
+            if (Program.ostBot.client != null)
             {
-                PlayerIOClient.RoomInfo[] roomInfo = OstBot.client.Multiplayer.ListRooms(comboBox_RoomType.Text, new Dictionary<string, string>(), 200000, 0);
+                PlayerIOClient.RoomInfo[] roomInfo = Program.ostBot.client.Multiplayer.ListRooms(comboBox_RoomType.Text, new Dictionary<string, string>(), 200000, 0);
 
                 //checkedListBox_Rooms.Items.Clear();
                 listView1.Items.Clear();
@@ -340,7 +340,7 @@ namespace OstBot_2_1
         {
             button_CrackCode.Enabled = false;
 
-            if (OstBot.connection == null)
+            if (Program.ostBot.connection == null)
                 return;
 
             backgroundWorker_CodeCracker.RunWorkerAsync();
@@ -352,7 +352,7 @@ namespace OstBot_2_1
 
             for (int i = 0; i + codeMinValue < numericUpDown_MaxCrackCode.Value; i++)
             {
-                    OstBot.connection.Send("access",
+                    Program.ostBot.connection.Send("access",
                         toDigits((int)numericUpDown_CrackCodeDigits.Value, codeMinValue + i));
 
                 if ((codeMinValue + i) % 2 == 0)
@@ -364,9 +364,9 @@ namespace OstBot_2_1
                     backgroundWorker_CodeCracker.ReportProgress(codeMinValue + i);
                 }
 
-                if (OstBot.hasCode)
+                if (Program.ostBot.hasCode)
                 {
-                    OstBot.hasCode = false;
+                    Program.ostBot.hasCode = false;
                     codeMinValue = (codeMinValue + i) - 1000;
                     if (codeMinValue < 0)
                         codeMinValue = 0;
@@ -377,7 +377,7 @@ namespace OstBot_2_1
 
             for (int i = 0; i < 1000 && i + codeMinValue < numericUpDown_MaxCrackCode.Value; i++)
             {
-                OstBot.connection.Send("access",
+                Program.ostBot.connection.Send("access",
                     toDigits((int)numericUpDown_CrackCodeDigits.Value, codeMinValue + i));
 
                 Thread.Sleep(5);
@@ -388,9 +388,9 @@ namespace OstBot_2_1
                     backgroundWorker_CodeCracker.ReportProgress(codeMinValue+i);
                 }
 
-                if (OstBot.hasCode)
+                if (Program.ostBot.hasCode)
                 {
-                    OstBot.hasCode = false;
+                    Program.ostBot.hasCode = false;
                     codeMinValue = codeMinValue +i - 100;
                     backgroundWorker_CodeCracker.ReportProgress(codeMinValue);
                     break;
@@ -399,7 +399,7 @@ namespace OstBot_2_1
 
             for (int i = 0; i < 100 && i + codeMinValue < numericUpDown_MaxCrackCode.Value; i++)
             {
-                OstBot.connection.Send("access",
+                Program.ostBot.connection.Send("access",
                     toDigits((int)numericUpDown_CrackCodeDigits.Value, codeMinValue + i));
 
                 Thread.Sleep(50);
@@ -407,9 +407,9 @@ namespace OstBot_2_1
                 Program.console.WriteLine((i + codeMinValue).ToString());
                 backgroundWorker_CodeCracker.ReportProgress(codeMinValue + i);
 
-                if (OstBot.hasCode)
+                if (Program.ostBot.hasCode)
                 {
-                    OstBot.hasCode = false;
+                    Program.ostBot.hasCode = false;
                     codeMinValue = codeMinValue+  i-10;
                     backgroundWorker_CodeCracker.ReportProgress(codeMinValue);
                     break;
@@ -418,7 +418,7 @@ namespace OstBot_2_1
 
             for (int i = 0; i < 10 && i + codeMinValue < numericUpDown_MaxCrackCode.Value; i++)
             {
-                OstBot.connection.Send("access",
+                Program.ostBot.connection.Send("access",
                     toDigits((int)numericUpDown_CrackCodeDigits.Value, codeMinValue + i));
 
                 Thread.Sleep(500);
@@ -426,9 +426,9 @@ namespace OstBot_2_1
                 Program.console.WriteLine((i + codeMinValue).ToString());
                 backgroundWorker_CodeCracker.ReportProgress(codeMinValue + i);
 
-                if (OstBot.hasCode)
+                if (Program.ostBot.hasCode)
                 {
-                    OstBot.hasCode = false;
+                    Program.ostBot.hasCode = false;
                     codeMinValue += i;
                     backgroundWorker_CodeCracker.ReportProgress(codeMinValue);
                     break;
@@ -471,15 +471,15 @@ namespace OstBot_2_1
 
         private void numericUpDown1_ValueChanged(object sender, EventArgs e)
         {
-            OstBot.room.setDrawSleep((int)numericUpDown1.Value);
+            Program.ostBot.room.setDrawSleep((int)numericUpDown1.Value);
         }
 
         private void button_EnterCode_Click(object sender, EventArgs e)
         {
-            if (OstBot.connected)
+            if (Program.ostBot.connected)
             {
-                if (OstBot.connection != null)
-                    OstBot.connection.Send("access", textBox4.Text);
+                if (Program.ostBot.connection != null)
+                    Program.ostBot.connection.Send("access", textBox4.Text);
             }
         }
 
@@ -500,12 +500,12 @@ namespace OstBot_2_1
             
         }
 
-        private void checkedListBox_SubBots_SelectedIndexChanged(object sender, EventArgs e)
+        private void checkedListBox_BotSystems_SelectedIndexChanged(object sender, EventArgs e)
         {
-            for (int i = 0; i < checkedListBox_SubBots.Items.Count; i++)
+            for (int i = 0; i < checkedListBox_BotSystems.Items.Count; i++)
             {
-                var subBot = checkedListBox_SubBots.Items[i] as SubBot;
-                subBot.enabled = checkedListBox_SubBots.GetItemChecked(i);
+                var BotSystem = checkedListBox_BotSystems.Items[i] as BotSystem;
+                BotSystem.enabled = checkedListBox_BotSystems.GetItemChecked(i);
             }
         }
 
@@ -527,12 +527,12 @@ namespace OstBot_2_1
             foreach(var i in data)
             {
                 string name;
-                lock (OstBot.playerList)
+                lock (Program.ostBot.playerList)
                 {
-                    if (OstBot.playerList.ContainsKey(i.Key))
-                        name = OstBot.playerList[i.Key].name;
-                    else if (OstBot.leftPlayerList.ContainsKey(i.Key))
-                        name = OstBot.leftPlayerList[i.Key].name;
+                    if (Program.ostBot.playerList.ContainsKey(i.Key))
+                        name = Program.ostBot.playerList[i.Key].Name;
+                    else if (Program.ostBot.leftPlayerList.ContainsKey(i.Key))
+                        name = Program.ostBot.leftPlayerList[i.Key].Name;
                     else
                         name = "[" + i.Key.ToString() + "]";
                 }

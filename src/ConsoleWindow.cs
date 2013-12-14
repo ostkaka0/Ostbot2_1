@@ -50,7 +50,7 @@ namespace OstBot_2_1
                 if (textBox2.Focused)
                 {
                     textBox1.Text += "> " + textBox2.Text + System.Environment.NewLine;
-                    Program.ostBot.subBotHandler.onCommand(sender, textBox2.Text, -1,Program.ostBot);
+                    Program.ostBot.BotSystemHandler.onCommand(sender, textBox2.Text, -1, new Player(PlayerIOClient.Message.Create("m", -1, "", 0, 0, 0, false, false, false, 0, false, false, 0)), Program.ostBot);
                     textBox2.Text = "";
                 }
             }

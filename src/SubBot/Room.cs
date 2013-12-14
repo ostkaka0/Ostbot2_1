@@ -10,12 +10,12 @@ using Skylight;
 
 namespace OstBot_2_1
 {
-    public class Room : SubBot
+    public class Room : BotSystem
     {
-        public List<Block>[][,] blockMap = new List<Block>[2][,];
-        public  Queue<Block> blockQueue = new Queue<Block>();
-        public  Queue<Block> blockRepairQueue = new Queue<Block>();
-        public  HashSet<Block> blockSet = new HashSet<Block>();
+        public List<Block>[][,] blockMap;
+        public  Queue<Block> blockQueue;
+        public Queue<Block> blockRepairQueue; 
+        public  HashSet<Block> blockSet;
 
         public int width;
         public int height;
@@ -24,9 +24,24 @@ namespace OstBot_2_1
         bool blockDrawerEnabled = false;
 
         public Room(OstBot ostBot)
-            : base()
+            : base(ostBot)
         {
             enabled = true;
+        }
+
+        public override void onEnable()
+        {
+            blockMap = new List<Block>[2][,];
+            blockQueue = new Queue<Block>();
+            blockRepairQueue = new Queue<Block>();
+            blockSet = new HashSet<Block>();
+        }
+        public override void onDisable()
+        {
+            blockMap = null;
+            blockQueue = null;
+            blockRepairQueue = null;
+            blockSet = null;
         }
 
         public void setDrawSleep(int drawSleep)
@@ -86,13 +101,13 @@ namespace OstBot_2_1
                     if (blockMap[layer][x, y].Count > 0)
                     {
                         if (blockMap[layer][x, y].Count <= rollbacks)
-                            return Block.CreateBlock(layer, x, y, 0, -1);
+                            return Block.CreateBlock(layer, x, y, 0, null);
                         else
                             return blockMap[layer][x, y][blockMap[layer][x, y].Count - 1 - rollbacks];
                     }
                 }
             }
-            return Block.CreateBlock(layer, x, y, 0, -1);
+            return Block.CreateBlock(layer, x, y, 0, null);
         }
 
         public Block getBotMapBlock(int layer, int x, int y)
@@ -122,7 +137,7 @@ namespace OstBot_2_1
                     }
                 }
             }
-            return Block.CreateBlock(layer, x, y, 0, -1);
+            return Block.CreateBlock(layer, x, y, 0, null);
         }
 
 
@@ -135,7 +150,7 @@ namespace OstBot_2_1
                     if (x == 0 || y == 0 || x == width - 1 || y == width - 1)
                     {
                         blockMap[0][x, y].Clear();
-                        blockMap[0][x, y].Add(Block.CreateBlock(0, x, y, 9, -1));
+                        blockMap[0][x, y].Add(Block.CreateBlock(0, x, y, 9, null));
                         //Console.WriteLine("Border at " + x + " " + y);
                     }
                 }
@@ -150,7 +165,7 @@ namespace OstBot_2_1
             {
                 case "init":
                     bool isOwner;
-                    if (OstBot.isBB)
+                    if (ostBot.isBB)
                     {
                         //worldKey = rot13(m[3].ToString());
                         //botPlayerID = m.GetInt(6);
@@ -171,7 +186,7 @@ namespace OstBot_2_1
 
 
                     if (isOwner)
-                        BlockDrawer();
+                        BlockDrawer(ostBot);
 
                     lock (blockMap)
                     {
@@ -214,12 +229,13 @@ namespace OstBot_2_1
 
                 case "access":
                     Thread.Sleep(5);
-                    BlockDrawer();
+                    BlockDrawer(ostBot);
                     break;
 
                 case "b":
                     {
                         Block block;
+                        Player placer = null;
 
                         while (blockMap == null)
                             Thread.Sleep(5);
@@ -227,15 +243,15 @@ namespace OstBot_2_1
                         while (blockMap[m.GetInt(0)] == null)
                             Thread.Sleep(5);
 
-                        Block newBlock = new Block(m);
+                        Block newBlock = new Block(m, ostBot);
 
                         lock (blockMap)
                             blockMap[m.GetInt(0)][m.GetInt(1), m.GetInt(2)].Add(newBlock);
 
                         if (m.Count >= 5)
-                            block = Block.CreateBlock(m.GetInt(0), m.GetInt(1), m.GetInt(2), m.GetInt(3), m.GetInt(4));
+                            block = Block.CreateBlock(m.GetInt(0), m.GetInt(1), m.GetInt(2), m.GetInt(3), newBlock.placer);
                         else
-                            block = Block.CreateBlock(m.GetInt(0), m.GetInt(1), m.GetInt(2), m.GetInt(3), -1);
+                            block = Block.CreateBlock(m.GetInt(0), m.GetInt(1), m.GetInt(2), m.GetInt(3), null);
 
                         OnBlockDraw(block);
 
@@ -252,7 +268,7 @@ namespace OstBot_2_1
                         while (blockMap[0] == null)
                             Thread.Sleep(5);
 
-                        block = new Block(m);
+                        block = new Block(m, ostBot);
 
                         lock (blockMap)
                             blockMap[0][m.GetInt(0), m.GetInt(1)].Add(block);
@@ -282,7 +298,7 @@ namespace OstBot_2_1
                             {
                                 for (int i = 0; i < blockMap.Length; i++)
                                 {
-                                    blockMap[i][x, y].Add(Block.CreateBlock(0, x, y, 0, 0));
+                                    blockMap[i][x, y].Add(Block.CreateBlock(0, x, y, 0, null));
                                 }
                             }
                         }
@@ -296,7 +312,7 @@ namespace OstBot_2_1
             //}
             //catch (Exception e)
             //{
-            // OstBot.shutdown();
+            // ostBot.shutdown();
             //throw e;
             //}
         }
@@ -422,7 +438,7 @@ namespace OstBot_2_1
                                     }
 
                                 default:
-                                    block = Block.CreateBlock(layer, xIndex, yIndex, blockID, -1);
+                                    block = Block.CreateBlock(layer, xIndex, yIndex, blockID, null);
                                     break;
 
                             }
@@ -435,9 +451,9 @@ namespace OstBot_2_1
         }
 
 
-        private void BlockDrawer()
+        private void BlockDrawer(OstBot ostBot)
         {
-            OstBot.connection.Send(OstBot.worldKey + "k", true);
+            ostBot.connection.Send(ostBot.worldKey + "k", true);
             if (!blockDrawerEnabled)
             {
                 blockDrawerEnabled = true;
@@ -449,9 +465,9 @@ namespace OstBot_2_1
                         Stopwatch stopwatch = new Stopwatch();
                         stopwatch.Start();
 
-                        while (OstBot.connected)
+                        while (ostBot.connected)
                         {
-                            while (OstBot.hasCode)
+                            while (ostBot.hasCode)
                             {
 
                                 lock (blockQueue)
@@ -462,7 +478,7 @@ namespace OstBot_2_1
                                         if (blockSet.Contains(blockQueue.Peek()))
                                         {
                                             //Console.WriteLine("jag är en sjuk sak");
-                                            blockQueue.Peek().Send(OstBot.connection);
+                                            blockQueue.Peek().Send(ostBot.connection);
                                             lock (blockRepairQueue)
                                                 blockRepairQueue.Enqueue(blockQueue.Dequeue());
                                             //Console.WriteLine("!!");
@@ -485,7 +501,7 @@ namespace OstBot_2_1
                                         if (blockRepairQueue.Count == 0)
                                             continue;
 
-                                        blockRepairQueue.Peek().Send(OstBot.connection);
+                                        blockRepairQueue.Peek().Send(ostBot.connection);
                                         blockRepairQueue.Enqueue(blockRepairQueue.Dequeue());
                                     }
                                     else
@@ -506,7 +522,7 @@ namespace OstBot_2_1
                     }
                     catch (Exception e)
                     {
-                        OstBot.shutdown();
+                        ostBot.shutdown();
                         throw e;
                     }
 

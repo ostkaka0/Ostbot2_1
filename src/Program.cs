@@ -14,8 +14,8 @@ namespace OstBot_2_1
         public static Form1 form1;
         public static ConsoleWindow console;
 
-        [STAThread]
-         void Main(string[] args)
+        //[STAThread]
+        static void Main(string[] args)
         {
 
             /*try
@@ -29,7 +29,7 @@ namespace OstBot_2_1
             /*}
             catch (Exception e)
             {
-                OstBot.shutdown();
+                ostBot.shutdown();
                 ostBot = null;
                 throw e;
             }*/

@@ -38,13 +38,13 @@ namespace OstBot_2_1
             set { dataArray[3] = value; }
         }
 
-        public int b_userId
+        public Player placer
         {
             get
             {
                 if (dataArray.Length >= 5 && blockType == "b")
-                    return Convert.ToInt32(dataArray[4]);
-                return 0;
+                    return (Player)(dataArray[4]);
+                return null;
             }
         }
 
@@ -117,25 +117,33 @@ namespace OstBot_2_1
             }
         }
 
-        public Block(Message m) : this()
+        public Block(Message m, OstBot ostBot) : this()
         {
             dataArray = new object[m.Count];
 
             blockType = m.Type;
 
-            int i;
+            int i;// = 0;//= 1; // (0: layer)
 
             if (blockType == "b")
             {
                 i = 0;
+                if (ostBot.playerList.ContainsKey(m.GetInt(0)))
+                {
+                    dataArray[m.Count-1] = ostBot.playerList[m.GetInt(0)];
+                }
+                else
+                {
+                    dataArray[m.Count - 1] = (Player)null;
+                }
             }
             else
             {
                 i = 1;
-                dataArray[0] = 0;
+                dataArray[0] = 0;//(Player)null;
             }
 
-            for (int j = i; j < m.Count; j++)
+            for (int j = i; j < ((blockType == "b")? m.Count-1 : m.Count); j++)
             {
                 dataArray[j] = Program.ostBot.toObject(m, (uint)(j));
             }
@@ -234,11 +242,11 @@ namespace OstBot_2_1
             }
         }
 
-        public static Block CreateBlock(int layer, int x, int y, int blockId, int userId)
+        public static Block CreateBlock(int layer, int x, int y, int blockId, Player player)
         {
             Block block = new Block();
             block.blockType = "b";
-            block.dataArray = new object[] { layer, x, y, blockId, userId };
+            block.dataArray = new object[] { layer, x, y, blockId, player };
             return block;
         }
 

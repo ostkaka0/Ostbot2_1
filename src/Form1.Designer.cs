@@ -81,7 +81,7 @@
             this.tabPage6 = new System.Windows.Forms.TabPage();
             this.textBox6 = new System.Windows.Forms.TextBox();
             this.textBox5 = new System.Windows.Forms.TextBox();
-            this.checkedListBox_SubBots = new System.Windows.Forms.CheckedListBox();
+            this.checkedListBox_BotSystems = new System.Windows.Forms.CheckedListBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.chartPlacedBlocks = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
@@ -610,7 +610,7 @@
             // 
             this.tabPage6.Controls.Add(this.textBox6);
             this.tabPage6.Controls.Add(this.textBox5);
-            this.tabPage6.Controls.Add(this.checkedListBox_SubBots);
+            this.tabPage6.Controls.Add(this.checkedListBox_BotSystems);
             this.tabPage6.Location = new System.Drawing.Point(4, 22);
             this.tabPage6.Name = "tabPage6";
             this.tabPage6.Padding = new System.Windows.Forms.Padding(3);
@@ -634,15 +634,15 @@
             this.textBox5.Size = new System.Drawing.Size(448, 396);
             this.textBox5.TabIndex = 1;
             // 
-            // checkedListBox_SubBots
+            // checkedListBox_BotSystems
             // 
-            this.checkedListBox_SubBots.Dock = System.Windows.Forms.DockStyle.Right;
-            this.checkedListBox_SubBots.FormattingEnabled = true;
-            this.checkedListBox_SubBots.Location = new System.Drawing.Point(457, 3);
-            this.checkedListBox_SubBots.Name = "checkedListBox_SubBots";
-            this.checkedListBox_SubBots.Size = new System.Drawing.Size(316, 430);
-            this.checkedListBox_SubBots.TabIndex = 0;
-            this.checkedListBox_SubBots.SelectedIndexChanged += new System.EventHandler(this.checkedListBox_SubBots_SelectedIndexChanged);
+            this.checkedListBox_BotSystems.Dock = System.Windows.Forms.DockStyle.Right;
+            this.checkedListBox_BotSystems.FormattingEnabled = true;
+            this.checkedListBox_BotSystems.Location = new System.Drawing.Point(457, 3);
+            this.checkedListBox_BotSystems.Name = "checkedListBox_BotSystems";
+            this.checkedListBox_BotSystems.Size = new System.Drawing.Size(316, 430);
+            this.checkedListBox_BotSystems.TabIndex = 0;
+            this.checkedListBox_BotSystems.SelectedIndexChanged += new System.EventHandler(this.checkedListBox_BotSystems_SelectedIndexChanged);
             // 
             // tabPage3
             // 
@@ -768,7 +768,7 @@
         private System.Windows.Forms.TabPage tabPage6;
         private System.Windows.Forms.TextBox textBox6;
         private System.Windows.Forms.TextBox textBox5;
-        public System.Windows.Forms.CheckedListBox checkedListBox_SubBots;
+        public System.Windows.Forms.CheckedListBox checkedListBox_BotSystems;
         private System.Windows.Forms.TabPage tabPage3;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Button button3;

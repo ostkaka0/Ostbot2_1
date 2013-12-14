@@ -8,16 +8,30 @@ using System.Drawing;
 
 namespace OstBot_2_1
 {
-    public class Commands : SubBot
+    public class Commands : BotSystem
     {
-        private List<string> disabledPlayers = new List<string>();
-        private List<string> protectedPlayers = new List<string>();
-        private List<string> getPlacerPlayers = new List<string>();
+        private List<string> disabledPlayers;
+        private List<string> protectedPlayers;
+        private List<string> getPlacerPlayers;
 
         public Commands(OstBot ostBot)
             : base(ostBot)
         {
             enabled = true;
+        }
+
+        public override void onEnable()
+        {
+            disabledPlayers = new List<string>();
+            protectedPlayers = new List<string>();
+            getPlacerPlayers = new List<string>();
+        }
+
+        public override void onDisable()
+        {
+            disabledPlayers = null;
+            protectedPlayers = null;
+            getPlacerPlayers = null;
         }
 
         public override void onMessage(object sender, OstBot ostBot, PlayerIOClient.Message m)
@@ -35,7 +49,7 @@ namespace OstBot_2_1
                             {
                                 if (ostBot.playerList.ContainsKey(m.GetInt(4)))
                                 {
-                                    name = ostBot.playerList[m.GetInt(4)].name;
+                                    name = ostBot.playerList[m.GetInt(4)].Name;
                                 }
                             }
                             if (name == "") // else if
@@ -44,7 +58,7 @@ namespace OstBot_2_1
                                 {
                                     if (ostBot.leftPlayerList.ContainsKey(m.GetInt(4)))
                                     {
-                                        name = ostBot.leftPlayerList[m.GetInt(4)].name;
+                                        name = ostBot.leftPlayerList[m.GetInt(4)].Name;
                                     }
                                 }
                             }
@@ -54,46 +68,51 @@ namespace OstBot_2_1
                         {
                             /*return;
                         }*/
-                            Block trollBlock = new Block(m);
+                            Block trollBlock = new Block(m, ostBot);
                             Block block;
                             for (int i = 0; true; i++)
                             {
                                 block = ostBot.room.getMapBlock(trollBlock.layer, trollBlock.x, trollBlock.y, i);
-                                string name2 = "";
+                                /*string name2 = "";
 
                                 lock (ostBot.playerList)
                                 {
-                                    if (ostBot.playerList.ContainsKey(block.b_userId))
+                                    if (ostBot.playerList.ContainsKey(block.placer.UserId))
                                     {
-                                        name2 = ostBot.playerList[block.b_userId].name;
+                                        name2 = ostBot.playerList[block.placer.UserId].Name;
                                     }
                                 }
                                 if (name == "") //else if
                                 {
                                     lock (ostBot.leftPlayerList)
                                     {
-                                        if (ostBot.leftPlayerList.ContainsKey(block.b_userId))
+                                        if (ostBot.leftPlayerList.ContainsKey(block.placer.UserId))
                                         {
-                                            name2 = ostBot.leftPlayerList[block.b_userId].name;
+                                            name2 = ostBot.leftPlayerList[block.placer.UserId].Name;
                                         }
                                     }
-                                }
-
-                                if (!disabledPlayers.Contains(name2))
+                                }*/
+                                if (block.placer == null)
                                     break;
+
+                                lock (disabledPlayers)
+                                {
+                                    if (!disabledPlayers.Contains(block.placer.Name))
+                                        break;
+                                }
                             }
                             ostBot.room.DrawBlock(block);
                         }
                         else if (!protectedPlayers.Contains(name))
                         {
-                            Block trollBlock = new Block(m);
+                            Block trollBlock = new Block(m, ostBot);
                             Block oldBlock = ostBot.room.getMapBlock(trollBlock.layer, trollBlock.x, trollBlock.y, 1);
 
                             lock (ostBot.playerList)
                             {
-                                if (ostBot.playerList.ContainsKey(oldBlock.b_userId))
+                                if (ostBot.playerList.ContainsKey(oldBlock.placer.UserId))
                                 {
-                                    if (protectedPlayers.Contains(ostBot.playerList[oldBlock.b_userId].name))
+                                    if (protectedPlayers.Contains(oldBlock.placer.Name))
                                     {
                                         ostBot.room.DrawBlock(oldBlock);
                                     }
@@ -104,23 +123,23 @@ namespace OstBot_2_1
                         {
                             getPlacerPlayers.Remove(name);
                             string name2 = "[undefined]";
-                            Block block = new Block(m);
+                            Block block = new Block(m, ostBot);
                             Block oldBlock = ostBot.room.getMapBlock(block.layer, block.x, block.y, 1);
 
                             lock (ostBot.playerList)
                             {
-                                if (ostBot.playerList.ContainsKey(oldBlock.b_userId))
+                                if (ostBot.playerList.ContainsKey(oldBlock.placer.UserId))
                                 {
-                                    name2 = ostBot.playerList[oldBlock.b_userId].name;
+                                    name2 = oldBlock.placer.Name;
                                 }
                             }
                             if (name2 == "[undefined]")
                             {
                                 lock (ostBot.leftPlayerList)
                                 {
-                                    if (ostBot.leftPlayerList.ContainsKey(oldBlock.b_userId))
+                                    if (ostBot.leftPlayerList.ContainsKey(oldBlock.placer.UserId))
                                     {
-                                        name2 = ostBot.leftPlayerList[oldBlock.b_userId].name;
+                                        name2 = oldBlock.placer.Name;
                                     }
                                 }
                             }
@@ -175,11 +194,11 @@ namespace OstBot_2_1
                             int blockId;
                             Int32.TryParse(args[1], out blockId);
                             int layer = (blockId >= 500) ? 1 : 0;
-                            for (int y = 1; y < OstBot.room.height - 1; y++)
+                            for (int y = 1; y < ostBot.room.height - 1; y++)
                             {
-                                for (int x = 1; x < OstBot.room.width - 1; x++)
+                                for (int x = 1; x < ostBot.room.width - 1; x++)
                                 {
-                                    OstBot.room.DrawBlock(Block.CreateBlock(layer, x, y, blockId, -1));
+                                    ostBot.room.DrawBlock(Block.CreateBlock(layer, x, y, blockId, null));
                                 }
                             }
                         }
@@ -197,7 +216,7 @@ namespace OstBot_2_1
                         {
                             if (!int.TryParse(args[1], out toReplaceWith))
                             {
-                                OstBot.connection.Send("say", "Usage: !fillexpand <from id=0> <to id>");
+                                ostBot.connection.Send("say", "Usage: !fillexpand <from id=0> <to id>");
                                 return;
                             }
                         }
@@ -205,11 +224,11 @@ namespace OstBot_2_1
                         {
                             if (!int.TryParse(args[2], out toReplaceWith) || !int.TryParse(args[1], out toReplace))
                             {
-                                OstBot.connection.Send("say", "Usage: !fillexpand <from id=0> <to id>");
+                                ostBot.connection.Send("say", "Usage: !fillexpand <from id=0> <to id>");
                                 return;
                             }
                         }
-                        Block startBlock = OstBot.room.getBotMapBlock(0, player.blockX, player.blockY);
+                        Block startBlock = ostBot.room.getBotMapBlock(0, /*_*//*player.blockX, player.blockY*/0,0);
                         if (startBlock.blockId == toReplace)
                         {
                             int total = 0;
@@ -224,24 +243,24 @@ namespace OstBot_2_1
                                     for (int i = 0; i < closeBlocks.Count; i++)
                                     {
                                         Point current = new Point(closeBlocks[i].X + parent.X, closeBlocks[i].Y + parent.Y);
-                                        Block currentBlock = OstBot.room.getBotMapBlock(0, current.X, current.Y);
-                                        if (currentBlock.blockId == toReplace && !blocksToCheck.Contains(current) && !blocksToFill.Contains(current) && current.X >= 0 && current.Y >= 0 && current.X <= OstBot.room.width && current.Y <= OstBot.room.height)
+                                        Block currentBlock = ostBot.room.getBotMapBlock(0, current.X, current.Y);
+                                        if (currentBlock.blockId == toReplace && !blocksToCheck.Contains(current) && !blocksToFill.Contains(current) && current.X >= 0 && current.Y >= 0 && current.X <= ostBot.room.width && current.Y <= ostBot.room.height)
                                         {
                                             blocksToFill.Add(current);
                                             blocksToCheck.Enqueue(current);
                                             total++;
                                             if (total > 10000)
                                             {
-                                                OstBot.connection.Send("say", "Don't try to fill the whole world, fool!");
+                                                ostBot.connection.Send("say", "Don't try to fill the whole world, fool!");
                                                 return;
                                             }
                                         }
                                     }
                             }
-                            OstBot.connection.Send("say", "total blocks: " + total + ". Filling..");
+                            ostBot.connection.Send("say", "total blocks: " + total + ". Filling..");
                             foreach (Point p in blocksToFill)
                             {
-                                OstBot.room.DrawBlock(Block.CreateBlock(0, (int)p.X, (int)p.Y, toReplaceWith, player.id()));
+                                ostBot.room.DrawBlock(Block.CreateBlock(0, (int)p.X, (int)p.Y, toReplaceWith, player));
                             }
                         }
                     }
@@ -256,12 +275,12 @@ namespace OstBot_2_1
                             Int32.TryParse(args[2], out blockId2);
                             int layer1 = (blockId1 >= 500) ? 1 : 0;
                             int layer2 = (blockId2 >= 500) ? 1 : 0;
-                            for (int y = 1; y < OstBot.room.height - 1; y++)
+                            for (int y = 1; y < ostBot.room.height - 1; y++)
                             {
-                                for (int x = 1; x < OstBot.room.width - 1; x++)
+                                for (int x = 1; x < ostBot.room.width - 1; x++)
                                 {
-                                    if (OstBot.room.getBotMapBlock(layer1, x, y).blockId == blockId1)
-                                        OstBot.room.DrawBlock(Block.CreateBlock(layer2, x, y, blockId2, -1));
+                                    if (ostBot.room.getBotMapBlock(layer1, x, y).blockId == blockId1)
+                                        ostBot.room.DrawBlock(Block.CreateBlock(layer2, x, y, blockId2, null));
                                 }
                             }
                         }
@@ -295,34 +314,34 @@ namespace OstBot_2_1
                     {
                         for (int l = 0; l < 2; l++)
                         {
-                            for (int y = 0; y < OstBot.room.height; y++)
+                            for (int y = 0; y < ostBot.room.height; y++)
                             {
-                                for (int x = 0; x < OstBot.room.width; x++)
+                                for (int x = 0; x < ostBot.room.width; x++)
                                 {
                                     Block block;
 
-                                    //if (OstBot.room.getBotMapBlock(l, x, y).b_userId == -1)
+                                    //if (ostBot.room.getBotMapBlock(l, x, y).b_userId == -1)
                                     //    continue;
 
 
                                     for (int i = 0; true; i++)
                                     {
-                                        block = OstBot.room.getMapBlock(l, x, y, i);
+                                        block = ostBot.room.getMapBlock(l, x, y, i);
                                         string userName = "";
-                                        lock (OstBot.playerList)
+                                        lock (ostBot.playerList)
                                         {
-                                            if (OstBot.playerList.ContainsKey(block.b_userId))
+                                            if (ostBot.playerList.ContainsKey(block.placer.UserId))
                                             {
-                                                userName = OstBot.playerList[block.b_userId].name;
+                                                userName = block.placer.Name;
                                             }
                                         }
                                         if (userName == "") //else if
                                         {
-                                            lock (OstBot.leftPlayerList)
+                                            lock (ostBot.leftPlayerList)
                                             {
-                                                if (OstBot.leftPlayerList.ContainsKey(block.b_userId))
+                                                if (ostBot.leftPlayerList.ContainsKey(block.placer.UserId))
                                                 {
-                                                    userName = OstBot.leftPlayerList[block.b_userId].name;
+                                                    userName = block.placer.Name;
                                                 }
                                             }
                                         }
@@ -332,7 +351,7 @@ namespace OstBot_2_1
 
                                         if (userName == args[1])
                                         {
-                                            OstBot.room.DrawBlock(block);
+                                            ostBot.room.DrawBlock(block);
                                             break;
                                         }
                                         else
@@ -352,34 +371,34 @@ namespace OstBot_2_1
                     {
                         for (int l = 0; l < 2; l++)
                         {
-                            for (int y = 0; y < OstBot.room.height; y++)
+                            for (int y = 0; y < ostBot.room.height; y++)
                             {
-                                for (int x = 0; x < OstBot.room.width; x++)
+                                for (int x = 0; x < ostBot.room.width; x++)
                                 {
                                     Block block;
 
-                                    //if (OstBot.room.getBotMapBlock(l, x, y).b_userId == -1)
+                                    //if (ostBot.room.getBotMapBlock(l, x, y).b_userId == -1)
                                     //    continue;
 
 
                                     for (int i = 0; true; i++)
                                     {
-                                        block = OstBot.room.getMapBlock(l, x, y, i);
+                                        block = ostBot.room.getMapBlock(l, x, y, i);
                                         string userName = "";
-                                        lock (OstBot.playerList)
+                                        lock (ostBot.playerList)
                                         {
-                                            if (OstBot.playerList.ContainsKey(block.b_userId))
+                                            if (ostBot.playerList.ContainsKey(block.placer.UserId))
                                             {
-                                                userName = OstBot.playerList[block.b_userId].name;
+                                                userName = block.placer.Name;
                                             }
                                         }
                                         if (userName == "") //else if
                                         {
-                                            lock (OstBot.leftPlayerList)
+                                            lock (ostBot.leftPlayerList)
                                             {
-                                                if (OstBot.leftPlayerList.ContainsKey(block.b_userId))
+                                                if (ostBot.leftPlayerList.ContainsKey(block.placer.UserId))
                                                 {
-                                                    userName = OstBot.leftPlayerList[block.b_userId].name;
+                                                    userName = block.placer.Name;
                                                 }
                                             }
                                         }
@@ -389,7 +408,7 @@ namespace OstBot_2_1
 
                                         if (protectedPlayers.Contains(userName))//if (userName == args[1])
                                         {
-                                            OstBot.room.DrawBlock(block);
+                                            ostBot.room.DrawBlock(block);
                                             break;
                                         }
                                         else
@@ -407,15 +426,21 @@ namespace OstBot_2_1
                 case "disableedit":    //<spelarnamn>
                     if (args.Length > 1 && isBotMod)
                     {
-                        if (!disabledPlayers.Contains(args[1]))
-                            disabledPlayers.Add(args[1]);
+                        lock (disabledPlayers)
+                        {
+                            if (!disabledPlayers.Contains(args[1]))
+                                disabledPlayers.Add(args[1]);
+                        }
                     }
                     break;
                 case "enableedit":    //<spelarnamn>
                     if (args.Length > 1 && isBotMod)
                     {
-                        if (disabledPlayers.Contains(args[1]))
-                            disabledPlayers.Remove(args[1]);
+                        lock (disabledPlayers)
+                        {
+                            if (disabledPlayers.Contains(args[1]))
+                                disabledPlayers.Remove(args[1]);
+                        }
                     }
                     break;
                 case "rollback":   //<spelarnamn>
@@ -423,41 +448,50 @@ namespace OstBot_2_1
                     {
                         for (int l = 0; l < 2; l++)
                         {
-                            for (int y = 0; y < OstBot.room.height; y++)
+                            for (int y = 0; y < ostBot.room.height; y++)
                             {
-                                for (int x = 0; x < OstBot.room.width; x++)
+                                for (int x = 0; x < ostBot.room.width; x++)
                                 {
                                     Block block;
 
-                                    if (OstBot.room.getBotMapBlock(l, x, y).b_userId == -1)
-                                        continue;
+                                    {
+                                        Block block2 = ostBot.room.getBotMapBlock(l, x, y);
+                                    
+                                        if (block2.placer != null)
+                                            if (block2.placer.UserId == -1)
+                                                continue;
+                                    }
 
 
                                     for (int i = 0; true; i++)
                                     {
-                                        block = OstBot.room.getMapBlock(l, x, y, i);
+                                        block = ostBot.room.getMapBlock(l, x, y, i);
                                         string userName = "";
-                                        lock (OstBot.playerList)
+                                        if (block.placer != null)
                                         {
-                                            if (OstBot.playerList.ContainsKey(block.b_userId))
+                                            userName = block.placer.Name;
+                                        }
+                                        /*lock (ostBot.playerList)
+                                        {
+                                            if (ostBot.playerList.ContainsKey(block.placer.UserId))
                                             {
-                                                userName = OstBot.playerList[block.b_userId].name;
+                                                userName = block.placer.Name;
                                             }
                                         }
                                         if (userName == "") //else if
                                         {
-                                            lock (OstBot.leftPlayerList)
+                                            lock (ostBot.leftPlayerList)
                                             {
-                                                if (OstBot.leftPlayerList.ContainsKey(block.b_userId))
+                                                if (ostBot.leftPlayerList.ContainsKey(block.placer.UserId))
                                                 {
-                                                    userName = OstBot.leftPlayerList[block.b_userId].name;
+                                                    userName = block.placer.Name;
                                                 }
                                             }
-                                        }
+                                        }*/
 
                                         if (userName != args[1])
                                         {
-                                            OstBot.room.DrawBlock(block);
+                                            ostBot.room.DrawBlock(block);
                                             break;
                                         }
                                         else
@@ -477,11 +511,11 @@ namespace OstBot_2_1
                     if (args.Length > 1)
                     {
                         int playerId;
-                        lock (OstBot.nameList)
+                        lock (ostBot.nameList)
                         {
-                            if (OstBot.nameList.ContainsKey(args[1]))
+                            if (ostBot.nameList.ContainsKey(args[1]))
                             {
-                                playerId = OstBot.nameList[args[1]];
+                                playerId = ostBot.nameList[args[1]];
                             }
                             else
                             {
@@ -489,11 +523,11 @@ namespace OstBot_2_1
                             }
                         }
                         Player playerToDisable;
-                        lock (OstBot.playerList)
+                        lock (ostBot.playerList)
                         {
-                            if (OstBot.playerList.ContainsKey(playerId))
+                            if (ostBot.playerList.ContainsKey(playerId))
                             {
-                                playerToDisable = OstBot.playerList[playerId];
+                                playerToDisable = ostBot.playerList[playerId];
                             }
                             else
                             {
@@ -509,6 +543,5 @@ namespace OstBot_2_1
         {
 
         }
-
     }
 }

@@ -7,39 +7,52 @@ using System.Threading.Tasks;
 
 namespace OstBot_2_1
 {
-    public class SubBotHandler
+    public class BotSystemHandler
     {
-        private  List<SubBot> subBotList = new List<SubBot>();
+        //delegate BotSystem BotSystemConstructor(OstBot ostBot);
+        private Dictionary<string, BotSystem> botSystems = new Dictionary<string, BotSystem>();
 
-        public  void AddSubBot(SubBot subBot)
+        public BotSystem getBotSystem(string name)
         {
-            lock (subBotList)
-                subBotList.Add(subBot);
+            lock (botSystems)
+            {
+                if (botSystems.ContainsKey(name))
+                    return botSystems[name];
+                else
+                    return null;
+            }
+        }
+
+        public void AddBotSystem(BotSystem botSystem)
+        {
+            lock (botSystems)
+                botSystems.Add(botSystem.GetType().ToString(), botSystem);
 
             Program.form1.Invoke(new Action(() =>
                 {
-                    Program.form1.checkedListBox_SubBots.Items.Add(subBot);
-                    subBot.id = Program.form1.checkedListBox_SubBots.Items.Count - 1;
+                    Program.form1.checkedListBox_BotSystems.Items.Add(botSystem);
+                    botSystem.id = Program.form1.checkedListBox_BotSystems.Items.Count - 1;
+                    Program.form1.checkedListBox_BotSystems.SetItemChecked(botSystem.id, botSystem.enabled);
                 }));
         }
 
-        public  void RemoveSubBot(SubBot subBot)
+        public  void RemoveBotSystem(BotSystem botSystem)
         {
-            lock (subBotList)
-                subBotList.Remove(subBot);
+            lock (botSystems)
+                botSystems.Remove(botSystem.GetType().ToString());
         }
 
         public  void onMessage(object sender, OstBot ostBot, PlayerIOClient.Message m)
         {
-            lock (subBotList)
+            lock (botSystems)
             {
-                foreach (SubBot subBot in subBotList)
+                foreach (var pair in botSystems)
                 {
-                    if (subBot.enabled)
+                    if (pair.Value != null)
                     {
                         new Task(() =>//new Thread(() =>
                             {
-                                subBot.onMessage(sender, m);
+                                pair.Value.onMessage(sender, ostBot, m);
                             }).Start();
                     }
                 }
@@ -48,59 +61,62 @@ namespace OstBot_2_1
 
         public  void OnDisconnect(object sender, string reason)
         {
-            lock (subBotList)
+            lock (botSystems)
             {
-                foreach (SubBot subBot in subBotList)
+                foreach (var pair in botSystems)
                 {
-                    if (subBot.enabled)
+                    if (pair.Value != null)
                     {
                         new Task(() =>
                         {
-                            subBot.onDisconnect(sender, reason);
+                            pair.Value.onDisconnect(sender, reason);
+                            pair.Value.onDisable();
                         }).Start();
                     }
                 }
 
-                subBotList.Clear();
+                System.Threading.Thread.Sleep(500);
+
+                botSystems.Clear();
 
                 Program.form1.Invoke(new Action(()=>
-                    Program.form1.checkedListBox_SubBots.Items.Clear()
+                    Program.form1.checkedListBox_BotSystems.Items.Clear()
                     ));
             }
         }
 
-        public  void onCommand(object sender, string text, int userId, OstBot ostBot)
+        public  void onCommand(object sender, string text, int userId, Player player, OstBot ostBot)
         {
             string[] args = text.Split(' ');
 
             string[] arg = text.ToLower().Split(' ');
             string name = "";
-            Player player;
+            /*Player player;
 
             lock (ostBot.playerList)
             {
                 if (ostBot.playerList.ContainsKey(userId))
                 {
                     player = ostBot.playerList[userId];
-                    name = player.name;
+                    name = player.Name;
                 }
                 else
                 {
-                    player = new Player(-1, "", 0, 0, 0, false, false, false, 0, false, false, 0);
+                    player = new Player(PlayerIOClient.Message.Create("m", -1, "", 0, 0, 0, false, false, false, 0, false, false, 0)); //new EEPlayer(-1, "", 0, 0, 0, false, false, false, 0, false, false, 0);
                 }
-            }
+            }*/
             bool isBotMod = (name == "ostkaka" || name == "botost" || name == "gustav9797" || name == "gbot" || player.ismod || userId == -1);
 
-            lock (subBotList)
+            lock (botSystems)
             {
-                foreach (SubBot subBot in subBotList)
+                foreach (var pair in botSystems)
                 {
-                    if (subBot.enabled)
+                    if (pair.Value != null)
                     {
-                        new Task(() =>//new Thread(() =>
-                        {
-                            subBot.onCommand(sender, text, args, userId, player, name, isBotMod);
-                        }).Start();
+                        //new Task(() =>//new Thread(() =>
+                        //{
+                            pair.Value.onCommand(sender, ostBot, text, args, userId, player, name, isBotMod);
+                        //}).Start();
                     }
                 }
             }
